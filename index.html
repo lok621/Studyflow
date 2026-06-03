@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loknotes</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c6dfa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Loknotes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d14;
+  --surface: #13131f;
+  --surface2: #1a1a2e;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0eeff;
+  --muted: #7b7a9a;
+  --purple: #8b5cf6;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+  --amber: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; }
+
+/* BG decoration */
+body::before {
+  content: '';
+  position: fixed; top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed; bottom: -200px; left: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,13,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+}
+.nav-logo { font-family: var(--font-head); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.nav-logo span { color: var(--purple); }
+.nav-tabs { display: flex; gap: 4px; }
+.tab {
+  padding: 7px 14px; border-radius: 20px; cursor: pointer;
+  font-size: 13px; font-weight: 500; transition: all 0.2s;
+  border: none; background: transparent; color: var(--muted);
+  font-family: var(--font-body);
+}
+.tab.active { background: var(--surface2); color: var(--text); }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* PAGES */
+.page { display: none; padding: 20px; position: relative; z-index: 1; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SECTION TITLE */
+.section-title {
+  font-family: var(--font-head); font-size: 22px; font-weight: 700;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+}
+.tag { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+.tag-purple { background: rgba(139,92,246,0.2); color: var(--purple); }
+.tag-cyan { background: rgba(6,182,212,0.2); color: var(--cyan); }
+.tag-pink { background: rgba(236,72,153,0.2); color: var(--pink); }
+.tag-amber { background: rgba(245,158,11,0.2); color: var(--amber); }
+
+/* CARDS */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+
+/* ===== EMPLOI DU TEMPS ===== */
+.day-header {
+  font-family: var(--font-head); font-size: 12px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px;
+  margin: 18px 0 8px;
+}
+.day-header:first-of-type { margin-top: 0; }
+.cours-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+  transition: transform 0.15s;
+}
+.cours-card:hover { transform: translateX(4px); }
+.cours-color { width: 4px; height: 44px; border-radius: 4px; flex-shrink: 0; }
+.cours-info { flex: 1; }
+.cours-name { font-weight: 500; font-size: 15px; }
+.cours-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cours-time { font-size: 12px; color: var(--muted); text-align: right; }
+.btn-add-cours {
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: var(--surface2); border: 1px dashed rgba(139,92,246,0.4);
+  color: var(--purple); font-size: 14px; font-weight: 500;
+  cursor: pointer; margin-top: 8px; font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.btn-add-cours:hover { background: rgba(139,92,246,0.1); border-color: var(--purple); }
+
+/* ===== DEVOIRS ===== */
+.devoir-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.devoir-item.done { opacity: 0.45; }
+.devoir-item.done .devoir-title { text-decoration: line-through; }
+.checkbox {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; margin-top: 1px;
+}
+.checkbox.checked { background: var(--purple); border-color: var(--purple); }
+.checkbox.checked::after { content: '✓'; font-size: 12px; color: white; }
+.devoir-content { flex: 1; }
+.devoir-title { font-size: 14px; font-weight: 500; }
+.devoir-meta { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+.urgence { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.urgence-high { background: rgba(239,68,68,0.2); color: var(--red); }
+.urgence-med { background: rgba(245,158,11,0.2); color: var(--amber); }
+.urgence-low { background: rgba(16,185,129,0.2); color: var(--green); }
+.btn-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; opacity: 0; transition: opacity 0.2s; }
+.devoir-item:hover .btn-del { opacity: 1; }
+
+/* FORM */
+.add-form {
+  background: var(--surface2); border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 16px; padding: 16px; margin-bottom: 16px;
+  display: none;
+}
+.add-form.open { display: block; animation: fadeIn 0.2s ease; }
+.form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.form-row:last-child { margin-bottom: 0; }
+input, select, textarea {
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); border-radius: 10px; padding: 9px 12px;
+  font-size: 14px; font-family: var(--font-body); flex: 1;
+  outline: none; transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--purple); }
+select option { background: var(--surface); }
+.btn-submit {
+  background: var(--purple); color: white; border: none;
+  border-radius: 10px; padding: 9px 18px; cursor: pointer;
+  font-size: 14px; font-weight: 500; font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.btn-submit:hover { background: #7c3aed; transform: scale(0.98); }
+.btn-cancel {
+  background: transparent; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 14px; cursor: pointer;
+  font-size: 14px; font-family: var(--font-body); transition: all 0.2s;
+}
+.btn-cancel:hover { color: var(--text); }
+.btn-open {
+  width: 100%; padding: 13px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.1));
+  border: 1px solid rgba(139,92,246,0.3); color: var(--purple);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-head); letter-spacing: 0.3px;
+  transition: all 0.2s; margin-bottom: 16px;
+}
+.btn-open:hover { border-color: var(--purple); background: rgba(139,92,246,0.2); }
+
+/* ===== COUNTDOWN ===== */
+.exam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.exam-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px; text-align: center;
+  position: relative; overflow: hidden; transition: transform 0.2s;
+}
+.exam-card:hover { transform: translateY(-3px); }
+.exam-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 16px 16px 0 0;
+}
+.exam-card.purple::before { background: linear-gradient(90deg, var(--purple), var(--pink)); }
+.exam-card.cyan::before { background: linear-gradient(90deg, var(--cyan), #8b5cf6); }
+.exam-card.amber::before { background: linear-gradient(90deg, var(--amber), var(--pink)); }
+.exam-card.green::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.exam-subject { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.exam-name { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 12px; line-height: 1.2; }
+.countdown-num {
+  font-family: var(--font-head); font-size: 36px; font-weight: 800;
+  line-height: 1; margin-bottom: 4px;
+}
+.countdown-num.urgent { color: var(--red); }
+.countdown-num.soon { color: var(--amber); }
+.countdown-num.ok { color: var(--cyan); }
+.countdown-label { font-size: 11px; color: var(--muted); }
+.btn-del-exam { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; opacity: 0; transition: opacity 0.2s; }
+.exam-card:hover .btn-del-exam { opacity: 1; }
+
+/* STATS BAR */
+.stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
+.stat-pill {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; text-align: center;
+}
+.stat-pill-num { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.stat-pill-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.purple-num { color: var(--purple); }
+.amber-num { color: var(--amber); }
+.red-num { color: var(--red); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.empty-text { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Study<span>Flow</span></div>
+  <div class="nav-tabs">
+    <button class="tab active" onclick="showPage('emploi')">📅 EDT</button>
+    <button class="tab" onclick="showPage('devoirs')">📚 Devoirs</button>
+    <button class="tab" onclick="showPage('exams')">⏳ Examens</button>
+  </div>
+</nav>
+
+<!-- EMPLOI DU TEMPS -->
+<div id="page-emploi" class="page active">
+  <div class="section-title">
+    Emploi du temps
+    <span class="tag tag-purple">Semaine</span>
+  </div>
+
+  <div id="cours-list"></div>
+
+  <button class="btn-add-cours" onclick="toggleForm('form-cours')">+ Ajouter un cours</button>
+
+  <div id="form-cours" class="add-form">
+    <div class="form-row">
+      <input type="text" id="cours-nom" placeholder="Matière (ex: Maths)">
+      <input type="text" id="cours-prof" placeholder="Prof (optionnel)">
+    </div>
+    <div class="form-row">
+      <select id="cours-jour">
+        <option value="Lundi">Lundi</option>
+        <option value="Mardi">Mardi</option>
+        <option value="Mercredi">Mercredi</option>
+        <option value="Jeudi">Jeudi</option>
+        <option value="Vendredi">Vendredi</option>
+        <option value="Samedi">Samedi</option>
+      </select>
+      <input type="time" id="cours-debut" value="08:00">
+      <input type="time" id="cours-fin" value="09:00">
+    </div>
+    <div class="form-row">
+      <select id="cours-color">
+        <option value="#8b5cf6">Violet</option>
+        <option value="#06b6d4">Cyan</option>
+        <option value="#ec4899">Rose</option>
+        <option value="#f59e0b">Ambre</option>
+        <option value="#10b981">Vert</option>
+        <option value="#ef4444">Rouge</option>
+      </select>
+      <input type="text" id="cours-salle" placeholder="Salle (optionnel)">
+    </div>
+    <div class="form-row">
+      <button class="btn-submit" onclick="addCours()">Ajouter</button>
+      <button class="btn-cancel" onclick="toggleForm('form-cours')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEVOIRS -->
+<div id="page-devoirs" class="page">
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div class="stat-pill-num purple-num" id="stat-total">0</div>
+      <div class="stat-pill-label">Total</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-num amber-num" id="stat-reste">0</div>
+      <div class="stat-pill-label">À faire</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-pill-num red-num" id="stat-urgent">0</div>
+      <div class="stat-pill-label">Urgents</div>
+    </div>
+  </div>
+
+  <button class="btn-open" onclick="toggleForm('form-devoir')">+ Nouveau devoir</button>
+
+  <div id="form-devoir" class="add-form">
+    <div class="form-row">
+      <input type="text" id="dv-titre" placeholder="Titre du devoir">
+    </div>
+    <div class="form-row">
+      <input type="text" id="dv-matiere" placeholder="Matière">
+      <input type="date" id="dv-date">
+    </div>
+    <div class="form-row">
+      <select id="dv-urgence">
+        <option value="high">🔴 Urgent</option>
+        <option value="med" selected>🟡 Moyen</option>
+        <option value="low">🟢 Tranquille</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <textarea id="dv-note" placeholder="Notes (optionnel)" rows="2" style="resize:none;"></textarea>
+    </div>
+    <div class="form-row">
+      <button class="btn-submit" onclick="addDevoir()">Ajouter</button>
+      <button class="btn-cancel" onclick="toggleForm('form-devoir')">Annuler</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="font-size:16px; margin-bottom:10px;">
+    À faire <span class="tag tag-amber">en attente</span>
+  </div>
+  <div id="devoirs-todo"></div>
+
+  <div class="section-title" style="font-size:16px; margin-top:20px; margin-bottom:10px;">
+    Terminés <span class="tag tag-purple">✓</span>
+  </div>
+  <div id="devoirs-done"></div>
+</div>
+
+<!-- EXAMENS / COUNTDOWN -->
+<div id="page-exams" class="page">
+  <div class="section-title">
+    Compte à rebours
+    <span class="tag tag-pink">Examens</span>
+  </div>
+
+  <button class="btn-open" onclick="toggleForm('form-exam')">+ Ajouter un examen</button>
+
+  <div id="form-exam" class="add-form">
+    <div class="form-row">
+      <input type="text" id="ex-nom" placeholder="Nom de l'examen (ex: Bac Français)">
+    </div>
+    <div class="form-row">
+      <input type="text" id="ex-matiere" placeholder="Matière">
+      <input type="date" id="ex-date">
+    </div>
+    <div class="form-row">
+      <select id="ex-color">
+        <option value="purple">Violet</option>
+        <option value="cyan">Cyan</option>
+        <option value="amber">Ambre</option>
+        <option value="green">Vert</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <button class="btn-submit" onclick="addExam()">Ajouter</button>
+      <button class="btn-cancel" onclick="toggleForm('form-exam')">Annuler</button>
+    </div>
+  </div>
+
+  <div id="exams-grid" class="exam-grid"></div>
+</div>
+
+<script>
+const JOURS_ORDER = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+let data = JSON.parse(localStorage.getItem('loknotes') || '{"cours":[],"devoirs":[],"exams":[]}');
+
+function save() { localStorage.setItem('loknotes', JSON.stringify(data)); }
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='devoirs') renderDevoirs();
+  if(id==='emploi') renderCours();
+  if(id==='exams') renderExams();
+}
+
+function toggleForm(id) {
+  const f = document.getElementById(id);
+  f.classList.toggle('open');
+}
+
+/* ===== COURS ===== */
+function addCours() {
+  const nom = document.getElementById('cours-nom').value.trim();
+  const prof = document.getElementById('cours-prof').value.trim();
+  const jour = document.getElementById('cours-jour').value;
+  const debut = document.getElementById('cours-debut').value;
+  const fin = document.getElementById('cours-fin').value;
+  const color = document.getElementById('cours-color').value;
+  const salle = document.getElementById('cours-salle').value.trim();
+  if(!nom || !jour || !debut || !fin) return;
+  data.cours.push({id: Date.now(), nom, prof, jour, debut, fin, color, salle});
+  save(); renderCours();
+  document.getElementById('form-cours').classList.remove('open');
+  ['cours-nom','cours-prof','cours-salle'].forEach(id => document.getElementById(id).value = '');
+}
+
+function deleteCours(id) {
+  data.cours = data.cours.filter(c => c.id !== id);
+  save(); renderCours();
+}
+
+function renderCours() {
+  const container = document.getElementById('cours-list');
+  const grouped = {};
+  JOURS_ORDER.forEach(j => grouped[j] = []);
+  data.cours.forEach(c => { if(grouped[c.jour]) grouped[c.jour].push(c); });
+  JOURS_ORDER.forEach(j => { if(grouped[j].length) grouped[j].sort((a,b) => a.debut.localeCompare(b.debut)); });
+
+  let html = '';
+  let hasAny = false;
+  JOURS_ORDER.forEach(jour => {
+    if(!grouped[jour].length) return;
+    hasAny = true;
+    html += `<div class="day-header">${jour}</div>`;
+    grouped[jour].forEach(c => {
+      html += `<div class="cours-card">
+        <div class="cours-color" style="background:${c.color}"></div>
+        <div class="cours-info">
+          <div class="cours-name">${c.nom}</div>
+          <div class="cours-meta">${c.prof ? c.prof + ' · ' : ''}${c.salle ? 'Salle ' + c.salle : ''}</div>
+        </div>
+        <div class="cours-time">${c.debut}–${c.fin}</div>
+        <button onclick="deleteCours(${c.id})" style="background:none;border:none;color:#7b7a9a;cursor:pointer;font-size:18px;padding:0 4px;margin-left:4px;" title="Supprimer">×</button>
+      </div>`;
+    });
+  });
+
+  if(!hasAny) html = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Aucun cours ajouté.<br>Commence par créer ton emploi du temps !</div></div>`;
+  container.innerHTML = html;
+}
+
+/* ===== DEVOIRS ===== */
+function addDevoir() {
+  const titre = document.getElementById('dv-titre').value.trim();
+  const matiere = document.getElementById('dv-matiere').value.trim();
+  const date = document.getElementById('dv-date').value;
+  const urgence = document.getElementById('dv-urgence').value;
+  const note = document.getElementById('dv-note').value.trim();
+  if(!titre) return;
+  data.devoirs.push({id: Date.now(), titre, matiere, date, urgence, note, done: false});
+  save(); renderDevoirs();
+  document.getElementById('form-devoir').classList.remove('open');
+  ['dv-titre','dv-matiere','dv-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('dv-date').value = '';
+}
+
+function toggleDone(id) {
+  const d = data.devoirs.find(d => d.id === id);
+  if(d) d.done = !d.done;
+  save(); renderDevoirs();
+}
+
+function deleteDevoir(id) {
+  data.devoirs = data.devoirs.filter(d => d.id !== id);
+  save(); renderDevoirs();
+}
+
+function renderDevoirs() {
+  const todo = data.devoirs.filter(d => !d.done);
+  const done = data.devoirs.filter(d => d.done);
+
+  document.getElementById('stat-total').textContent = data.devoirs.length;
+  document.getElementById('stat-reste').textContent = todo.length;
+  document.getElementById('stat-urgent').textContent = todo.filter(d => d.urgence === 'high').length;
+
+  const urgenceLabel = { high: ['urgence-high','Urgent'], med: ['urgence-med','Moyen'], low: ['urgence-low','Tranquille'] };
+
+  function renderList(items) {
+    if(!items.length) return '<div class="empty" style="padding:20px 0;"><div class="empty-text" style="font-size:13px;">Rien ici 🎉</div></div>';
+    return items.map(d => {
+      const [cls, label] = urgenceLabel[d.urgence] || ['urgence-low',''];
+      const dateStr = d.date ? new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', {day:'numeric',month:'short'}) : '';
+      return `<div class="devoir-item ${d.done?'done':''}">
+        <div class="checkbox ${d.done?'checked':''}" onclick="toggleDone(${d.id})"></div>
+        <div class="devoir-content">
+          <div class="devoir-title">${d.titre}</div>
+          <div class="devoir-meta">
+            ${d.matiere ? `<span>${d.matiere}</span>` : ''}
+            ${dateStr ? `<span>📅 ${dateStr}</span>` : ''}
+            <span class="urgence ${cls}">${label}</span>
+          </div>
+          ${d.note ? `<div style="font-size:12px;color:#7b7a9a;margin-top:4px;">${d.note}</div>` : ''}
+        </div>
+        <button class="btn-del" onclick="deleteDevoir(${d.id})">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('devoirs-todo').innerHTML = renderList(todo);
+  document.getElementById('devoirs-done').innerHTML = renderList(done);
+}
+
+/* ===== EXAMENS ===== */
+function addExam() {
+  const nom = document.getElementById('ex-nom').value.trim();
+  const matiere = document.getElementById('ex-matiere').value.trim();
+  const date = document.getElementById('ex-date').value;
+  const color = document.getElementById('ex-color').value;
+  if(!nom || !date) return;
+  data.exams.push({id: Date.now(), nom, matiere, date, color});
+  save(); renderExams();
+  document.getElementById('form-exam').classList.remove('open');
+  ['ex-nom','ex-matiere'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ex-date').value = '';
+}
+
+function deleteExam(id) {
+  data.exams = data.exams.filter(e => e.id !== id);
+  save(); renderExams();
+}
+
+function renderExams() {
+  const container = document.getElementById('exams-grid');
+  if(!data.exams.length) {
+    container.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">⏳</div><div class="empty-text">Ajoute tes examens pour voir le compte à rebours !</div></div>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  container.innerHTML = data.exams.map(e => {
+    const examDate = new Date(e.date + 'T00:00:00');
+    const diff = Math.ceil((examDate - today) / (1000*60*60*24));
+    const numClass = diff <= 7 ? 'urgent' : diff <= 30 ? 'soon' : 'ok';
+    const label = diff < 0 ? 'passé' : diff === 0 ? "aujourd'hui !" : diff === 1 ? 'demain !' : `jours`;
+    const num = diff < 0 ? '✓' : diff;
+    return `<div class="exam-card ${e.color}">
+      <button class="btn-del-exam" onclick="deleteExam(${e.id})">×</button>
+      <div class="exam-subject">${e.matiere}</div>
+      <div class="exam-name">${e.nom}</div>
+      <div class="countdown-num ${numClass}">${num}</div>
+      <div class="countdown-label">${label}</div>
+    </div>`;
+  }).join('');
+}
+
+// Init
+renderCours();
+renderDevoirs();
+renderExams();
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script>
+</body>
+</html>
