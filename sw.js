@@ -1,5 +1,5 @@
 const CACHE = 'loknotes-v1';
-const FILES = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+const FILES = ['/Studyflow/', '/Studyflow/index.html', '/Studyflow/manifest.json', '/Studyflow/icon-192.png', '/Studyflow/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

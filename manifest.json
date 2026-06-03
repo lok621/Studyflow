@@ -2,7 +2,7 @@
   "name": "Loknotes",
   "short_name": "Loknotes",
   "description": "Devoirs, emploi du temps et examens",
-  "start_url": "/",
+  "start_url": "/Studyflow/",
   "display": "standalone",
   "background_color": "#0e0e14",
   "theme_color": "#7c6dfa",
